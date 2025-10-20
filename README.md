@@ -79,9 +79,11 @@ pip install -r requirements.txt
 
 ## Author
 
-Soumyadip Das
+Soumyadip Das, and Rajdeep Chatterjee
 
+## Organization
 
+AmygdalaAI-India Lab [https://amygdalaaiindia.github.io/]
 
 ## License
 

@@ -1,0 +1,6 @@
+[console_scripts]
+stocks-miner-indices = stocks_miner.cli:indices_command
+stocks-miner-nse = stocks_miner.cli:nse_command
+stocks-miner-random = stocks_miner.cli:random_command
+stocks-miner-tda = stocks_miner.cli:tda_command
+

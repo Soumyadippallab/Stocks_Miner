@@ -1,0 +1,16 @@
+LICENSE
+README.md
+setup.py
+stocks_miner/__init__.py
+stocks_miner/cli.py
+stocks_miner/market_indices.py
+stocks_miner/nse_stocks.py
+stocks_miner/random_stocks.py
+stocks_miner/tda_crash_detection.py
+stocks_miner/utils.py
+stocks_miner.egg-info/PKG-INFO
+stocks_miner.egg-info/SOURCES.txt
+stocks_miner.egg-info/dependency_links.txt
+stocks_miner.egg-info/entry_points.txt
+stocks_miner.egg-info/requires.txt
+stocks_miner.egg-info/top_level.txt

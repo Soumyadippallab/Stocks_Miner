@@ -7,7 +7,7 @@ Stocks_miner is a Python-based tool for financial data analysis, leveraging libr
 3. Analyze randomly selected stocks or sectors.  
 4. Detect market crashes using Topological Data Analysis (TDA) on user-provided stock data.
 
----
+
 
 ## Installation
 
@@ -19,7 +19,7 @@ Or using the traditional setup:
 
 python setup.py install
 
----
+
 
 ## Usage
 
@@ -35,7 +35,7 @@ stocks-miner-random --k 5 --selection_type companies --start_date 2024-01-01 --e
 4. TDA Crash Detection  
 stocks-miner-tda "data/stock_data.csv" --start_date 2024-01-01 --end_date 2025-09-21
 
----
+
 
 ## Directory Structure
 
@@ -56,7 +56,7 @@ Stock_Miner2/
 ├── requirements.txt  
 └── setup.py  
 
----
+
 
 ## Dependencies
 
@@ -66,7 +66,7 @@ Install them using:
 
 pip install -r requirements.txt
 
----
+
 
 ## Features
 
@@ -75,13 +75,13 @@ pip install -r requirements.txt
 - Random Stocks/Sectors Analysis: Random selection of companies or sectors with evaluation metrics and visualizations of returns vs. volatility and Sharpe ratios.  
 - TDA Crash Detection: Detect potential market crashes using Takens embedding, persistence diagrams, Wasserstein and Bottleneck distances, and sliding window embeddings. Visualizations of price and distance metrics with crash indicators.
 
----
+
 
 ## Author
 
 Soumyadip Das
 
----
+
 
 ## License
 

@@ -79,7 +79,7 @@ pip install -r requirements.txt
 
 ## Author
 
-Soumyadip Das, and Rajdeep Chatterjee
+Soumyadip Das, and <a href="https://github.com/cserajdeep"> Rajdeep Chatterjee </a>
 
 ## Organization
 

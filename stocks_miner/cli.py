@@ -70,14 +70,14 @@ def main():
         process_stock_data(args.ticker, start_date, end_date)
 
         # Delete temporary CSV if it was freshly downloaded
-        if downloaded_temp:
+        '''if downloaded_temp:
             try:
                 os.remove(temp_csv)
                 print(f"Temporary file {temp_csv} deleted.")
             except Exception as e:
                 print(f"Warning: Could not delete temporary file {temp_csv}: {e}")
     else:
-        parser.print_help()
+        parser.print_help()'''
 
 
 if __name__ == "__main__":

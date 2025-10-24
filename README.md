@@ -166,7 +166,11 @@ pytest -q
 
 ## Author
 
-Soumyadip Das
+Soumyadip Das, and <a href="https://github.com/cserajdeep"> Rajdeep Chatterjee </a>
+
+## Organization
+
+AmygdalaAI-India Lab [https://amygdalaaiindia.github.io/]
 
 ## License
 

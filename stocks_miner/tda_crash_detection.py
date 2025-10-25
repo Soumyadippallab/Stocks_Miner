@@ -94,7 +94,11 @@ def process_stock_data(ticker, start_date="2010-01-01", end_date="2020-12-31",
     ax2.grid(True)
 
     plt.tight_layout()
-    plt.show()
+    #plt.show()
+    
+    from .utils import smart_show
+    smart_show()
+
 
     # Delete temporary CSV
     if os.path.exists(csv_file):

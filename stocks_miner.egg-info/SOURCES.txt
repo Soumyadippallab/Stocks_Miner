@@ -4,6 +4,7 @@ setup.py
 stocks_miner/__init__.py
 stocks_miner/cli.py
 stocks_miner/market_indices.py
+stocks_miner/notebook_helper.py
 stocks_miner/nse_stocks.py
 stocks_miner/random_stocks.py
 stocks_miner/tda_crash_detection.py

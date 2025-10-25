@@ -67,4 +67,7 @@ def analyze_market_indices(start_date=None, end_date=None):
     sns.heatmap(df_returns.corr(), annot=True, cmap="coolwarm")
     plt.title("Return Correlation Between Indices")
     plt.tight_layout()
-    plt.show()
+    #plt.show()
+    from .utils import smart_show
+    smart_show()
+

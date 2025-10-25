@@ -75,7 +75,7 @@ Notes:
 - If you publish this package, pin dependency versions in `requirements.txt` or use `setup.cfg`/`pyproject.toml` to manage them.
 
 ## Usage (examples)
-
+Syntax for vscode 
 Analyze market indices (example dates):
 
 ```powershell
@@ -105,6 +105,66 @@ For full help and options:
 ```powershell
 python -m stocks_miner.cli --help
 ```
+
+Syntax for notebook
+
+### Cell 1: Setup and Import
+import sys
+import os
+
+# Add stocks_miner to path
+sys.path.insert(0, os.path.join(os.getcwd(), 'stocks_miner'))
+
+# Import the helper
+from notebook_helper import setup_stocks_miner
+
+# Setup Stocks Miner and get the modules
+sm = setup_stocks_miner()
+
+# Optional: Also load random_stocks
+from stocks_miner import random_stocks
+sm.random_stocks = random_stocks
+
+print("✓ All modules loaded!")
+
+### Cell 2: Analyze Market Indices
+# Analyze major market indices (NIFTY 50, SENSEX, etc.)
+sm.market_indices.analyze_market_indices(
+    start_date="2025-01-01", 
+    end_date="2025-09-21"
+)
+
+### Cell 3: Analyze NSE Stocks
+# Analyze top NSE stocks
+sm.nse_stocks.analyze_nse_stocks(
+    num_tickers=10,     # Number of stocks to analyze
+    top_x=5,            # Top performers to identify
+    start_date="2025-01-01", 
+    end_date="2025-09-21"
+)
+
+### Cell 4: Analyze Random Stocks or Sectors
+# Analyze random selection of stocks or sectors
+sm.random_stocks.analyze_random_stocks_or_sectors(
+    k=5,                          # Number to select
+    selection_type='companies',   # 'companies' or 'sectors'
+    start_date="2025-01-01", 
+    end_date="2025-09-21"
+)
+
+### Cell 5: TDA Crash Detection (Advanced)
+# Topological Data Analysis for crash detection
+sm.tda_crash.process_stock_data(
+    ticker='RELIANCE.NS',
+    start_date='2020-01-01',
+    end_date='2024-12-31',
+    window_size=50,
+    embedding_dim=3,
+    time_delay=1
+)
+
+
+
 
 ## Directory structure
 

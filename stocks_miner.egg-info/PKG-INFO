@@ -1,12 +1,24 @@
-Metadata-Version: 2.1
-Name: stocks-miner
+Metadata-Version: 2.4
+Name: stocks_miner
 Version: 0.1.0
 Summary: A Python package for stock market analysis and crash detection using TDA.
-Home-page: UNKNOWN
 Author: Soumyadip Das
 License: MIT
-Platform: UNKNOWN
 License-File: LICENSE
-
-UNKNOWN
-
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: yfinance
+Requires-Dist: scikit-learn
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: seaborn
+Requires-Dist: yahooquery
+Requires-Dist: tqdm
+Requires-Dist: requests
+Requires-Dist: ripser
+Requires-Dist: persim
+Dynamic: author
+Dynamic: license
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: summary

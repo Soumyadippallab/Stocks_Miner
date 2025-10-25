@@ -1,0 +1,365 @@
+import requests
+import pandas as pd
+import io
+import yfinance as yf
+from yahooquery import Ticker
+from tqdm import tqdm
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from scipy import stats
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+import time
+import os
+import datetime
+import logging
+
+# Utility functions from the provided utils module
+def get_default_dates(months_back=6):
+    """Get default start (6 months ago) and end (today) dates."""
+    today = datetime.date.today()
+    start = today - datetime.timedelta(days=30 * months_back)
+    return start.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')
+
+def get_date_input(prompt, default):
+    """Prompt for date input with default."""
+    user_input = input(f"{prompt} (YYYY-MM-DD, default: {default}): ").strip()
+    if not user_input:
+        return pd.to_datetime(default)
+    try:
+        return pd.to_datetime(user_input)
+    except ValueError:
+        print("Invalid date format. Using default.")
+        return pd.to_datetime(default)
+
+def get_integer_input(prompt, default=0):
+    """Prompt for integer input with default."""
+    user_input = input(f"{prompt} (default: {default}): ").strip()
+    if not user_input:
+        return default
+    try:
+        return int(user_input)
+    except ValueError:
+        print("Invalid integer. Using default.")
+        return default
+
+def validate_file_path(file_path):
+    """Validate file path exists; reprompt if not."""
+    while not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
+        file_path = input("Enter valid path to your .xlsx or .csv file: ").strip()
+    return file_path
+
+def calculate_cagr(start_price, end_price, days):
+    """Calculate Compound Annual Growth Rate (CAGR)."""
+    if start_price <= 0 or end_price <= 0 or days <= 0:
+        return np.nan
+    years = days / 365.25
+    return ((end_price / start_price) ** (1 / years)) - 1
+
+# Configure warnings and plot style
+warnings.filterwarnings('ignore')
+plt.style.use('seaborn-v0_8')
+sns.set_palette("husl")
+
+def setup_logging(save_dir):
+    """Configure logging to track script execution and errors."""
+    log_file = os.path.join(save_dir, 'stocks_miner.log')
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG,  # Increased verbosity for debugging
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    logging.info("Starting NSE stocks analysis")
+
+def analyze_nse_stocks(num_tickers=None, top_x=None, start_date=None, end_date=None):
+    """Analyze NSE stocks with company-wise and sector-wise metrics, including CAGR."""
+    start_time = time.time()
+    
+    # Setup save directory
+    save_dir = r"C:\Users\Soumyadip\Desktop\Stocks_miner"
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Setup logging
+    setup_logging(save_dir)
+    
+    # Handle date inputs
+    default_start, default_end = get_default_dates()
+    start_date = get_date_input("Enter start date", default_start) if start_date is None else pd.to_datetime(start_date)
+    end_date = get_date_input("Enter end date", default_end) if end_date is None else pd.to_datetime(end_date)
+    top_x = get_integer_input("Enter number of top companies to display by CAGR", default=5) if top_x is None else top_x
+    
+    # Download NSE stock list
+    logging.info("Downloading NSE stock list")
+    print("📡 Downloading NSE stock list...")
+    url = "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        df_nse = pd.read_csv(io.BytesIO(response.content))
+        df_nse["Yahoo_Ticker"] = df_nse["SYMBOL"].astype(str) + ".NS"
+        df_nse = df_nse.reset_index(drop=True)
+        logging.info(f"Total NSE stocks loaded: {len(df_nse)}")
+        print(f"✅ Total NSE stocks loaded: {len(df_nse)}")
+    except Exception as e:
+        logging.error(f"Failed to download NSE stock list: {str(e)}")
+        print(f"❌ Failed to download NSE stock list: {str(e)}")
+        return None, None, None, None, None, None
+    
+    # Fetch asset profile info
+    logging.info("Fetching asset profile information")
+    print("🔍 Fetching asset profile information...")
+    tickers = df_nse["Yahoo_Ticker"].tolist()
+    if num_tickers is not None:
+        tickers = tickers[:num_tickers]
+    try:
+        t = Ticker(tickers)
+        infos = t.asset_profile
+    except Exception as e:
+        logging.error(f"Failed to fetch asset profiles: {str(e)}")
+        print(f"❌ Failed to fetch asset profiles: {str(e)}")
+        infos = {}
+    
+    # Initialize and map asset profile fields
+    asset_profile_fields = set()
+    for symbol, data in infos.items():
+        if isinstance(data, dict):
+            asset_profile_fields.update(data.keys())
+    for field in asset_profile_fields:
+        df_nse[field] = "Unknown"
+    for symbol, data in infos.items():
+        if isinstance(data, dict):
+            for field in asset_profile_fields:
+                df_nse.loc[df_nse["Yahoo_Ticker"] == symbol, field] = str(data.get(field, "Unknown"))
+    
+    # Display sectors
+    if 'sector' in df_nse.columns:
+        unique_sectors = df_nse['sector'].unique()
+        logging.info(f"Found {len(unique_sectors)} unique sectors")
+        print("\n🌐 Unique Sectors:")
+        for sector in sorted(unique_sectors):
+            if sector != "Unknown":
+                print(f"- {sector}")
+        print(f"Total unique sectors: {len([s for s in unique_sectors if s != 'Unknown'])}")
+    
+    # Data download and analysis
+    logging.info("Starting data analysis")
+    print("\n📊 Starting data analysis...")
+    summary_list = []
+    try:
+        for ticker in tqdm(tickers, desc="Processing tickers"):
+            try:
+                # Download stock data
+                logging.debug(f"Downloading data for {ticker}")
+                data = yf.download(ticker, start=start_date, end=end_date, progress=False, auto_adjust=False)
+                time.sleep(0.05)  # Line ~155, avoid API rate limits
+                if data.empty or 'Close' not in data.columns or data['Close'].isna().all():
+                    logging.warning(f"No valid data for {ticker}, skipping...")
+                    print(f" ❌ No data for {ticker}")
+                    continue
+                data = data.reset_index()
+                data['Returns'] = data['Close'].pct_change() * 100
+                data['MA20'] = data['Close'].rolling(window=20).mean()
+                data['MA50'] = data['Close'].rolling(window=50).mean()
+                data['Volatility'] = data['Returns'].rolling(window=20).std()
+                
+                # Linear regression
+                logging.debug(f"Performing linear regression for {ticker}")
+                trend_slope = r_squared = np.nan
+                if len(data) > 1 and not data['Close'].isna().all():
+                    X = np.arange(len(data)).reshape(-1, 1)
+                    y = data['Close'].values.reshape(-1, 1)
+                    reg = LinearRegression().fit(X, y)
+                    trend_slope = reg.coef_[0][0]
+                    r_squared = reg.score(X, y)
+                
+                # T-test
+                logging.debug(f"Performing t-test for {ticker}")
+                returns = data['Returns'].dropna()
+                t_stat = p_value = np.nan
+                if len(returns) > 1 and not returns.isna().all():
+                    t_stat, p_value = stats.ttest_1samp(returns, 0)
+                
+                # Statistics
+                logging.debug(f"Calculating statistics for {ticker}")
+                avg_return = returns.mean() if not returns.empty else np.nan
+                volatility = returns.std() if len(returns) > 1 and not returns.isna().all() else np.nan
+                sharpe_ratio = np.sqrt(252) * (avg_return / 100 / volatility) if volatility > 0 and not np.isnan(volatility) else np.nan
+                
+                # CAGR
+                logging.debug(f"Calculating CAGR for {ticker}")
+                days = (data['Date'].iloc[-1] - data['Date'].iloc[0]).days if len(data) > 1 else 0
+                cagr = calculate_cagr(data['Close'].iloc[0], data['Close'].iloc[-1], days) if days > 0 and not np.isnan(data['Close'].iloc[0]) and not np.isnan(data['Close'].iloc[-1]) else np.nan
+                cagr = cagr * 100  # Convert to percentage
+                
+                # Company info
+                logging.debug(f"Retrieving company info for {ticker}")
+                company_row = df_nse[df_nse["Yahoo_Ticker"] == ticker]
+                company_name = company_row["NAME OF COMPANY"].iloc[0] if not company_row.empty else "Unknown"
+                sector = company_row.get('sector', pd.Series(["Unknown"])).iloc[0]
+                
+                # Append to summary
+                logging.debug(f"Appending summary for {ticker}")
+                summary_list.append({
+                    "Ticker": ticker,
+                    "Company_Name": company_name,
+                    "Sector": sector,
+                    "Avg_Return_%": round(avg_return, 4) if not np.isnan(avg_return) else np.nan,
+                    "Volatility_%": round(volatility, 4) if not np.isnan(volatility) else np.nan,
+                    "Trend_Slope": round(trend_slope, 2) if not np.isnan(trend_slope) else np.nan,
+                    "R_Squared": round(r_squared, 4) if not np.isnan(r_squared) else np.nan,
+                    "T_Stat": round(t_stat, 4) if not np.isnan(t_stat) else np.nan,
+                    "P_Value": round(p_value, 4) if not np.isnan(p_value) else np.nan,
+                    "Sharpe_Ratio": round(sharpe_ratio, 4) if not np.isnan(sharpe_ratio) else np.nan,
+                    "CAGR_%": round(cagr, 4) if not np.isnan(cagr) else np.nan,
+                    "Significant_Trend": p_value < 0.05 if not np.isnan(p_value) else False
+                })
+                
+                # Generate and save ticker-specific plot
+                logging.debug(f"Generating plot for {ticker}")
+                plt.figure(figsize=(10, 5))
+                plt.plot(data['Date'], data['Close'], label="Close Price", color='blue')
+                plt.plot(data['Date'], data['MA20'], label="20-day MA", color='orange')
+                plt.plot(data['Date'], data['MA50'], label="50-day MA", color='green')
+                plt.title(f"{ticker} Stock Price (Close)")
+                plt.xlabel("Date")
+                plt.ylabel("Price (INR)")
+                plt.legend()
+                plt.grid(True)
+                save_path = os.path.join(save_dir, f"{ticker}_price_plot.png")
+                try:
+                    plt.savefig(save_path, dpi=100, bbox_inches='tight')
+                    plt.close()
+                    logging.info(f"Saved plot for {ticker} at {save_path}")
+                    print(f" ✅ {ticker}: Avg Return = {avg_return:.2f}%, Volatility = {volatility:.2f}%, Trend Slope = {trend_slope:.2f}, CAGR = {cagr:.2f}%")
+                except Exception as e:
+                    logging.error(f"Failed to save plot for {ticker}: {str(e)}")
+                    print(f" ❌ Failed to save plot for {ticker}: {str(e)}")
+                    plt.close()
+                    continue
+                
+            except Exception as e:
+                logging.error(f"Error processing {ticker}: {str(e)}")
+                print(f" ❌ Error processing {ticker}: {str(e)}")
+                continue
+    
+    except KeyboardInterrupt:
+        logging.warning("Analysis interrupted by user")
+        print("\n⚠️ Analysis interrupted by user")
+        # Save partial results
+        if summary_list:
+            partial_summary = pd.DataFrame(summary_list)
+            partial_summary.to_csv(os.path.join(save_dir, "partial_summary.csv"), index=False)
+            logging.info("Saved partial results to partial_summary.csv")
+            print("✅ Saved partial results to partial_summary.csv")
+    
+    print(f"\n🎯 Analysis Complete! Time: {time.time() - start_time:.2f} seconds")
+    
+    if not summary_list:
+        logging.warning("No valid data processed")
+        print("❌ No valid data processed")
+        return None, None, None, None, None, None
+    
+    final_summary = pd.DataFrame(summary_list)
+    if final_summary['Ticker'].duplicated().any():
+        final_summary = final_summary.drop_duplicates(subset=['Ticker']).reset_index(drop=True)
+    
+    for field in asset_profile_fields:
+        if field in df_nse.columns:
+            final_summary[field] = final_summary['Ticker'].map(df_nse.set_index('Yahoo_Ticker')[field])
+    
+    # Save final summary
+    summary_path = os.path.join(save_dir, "nse_summary.csv")
+    final_summary.to_csv(summary_path, index=False)
+    logging.info(f"Saved final summary to {summary_path}")
+    print(f"✅ Saved final summary to {summary_path}")
+    
+    # Company-wise analysis
+    print("\n📋 COMPANY-WISE STATISTICS:")
+    print(final_summary[['Ticker', 'Company_Name', 'Sector', 'Avg_Return_%', 'Volatility_%', 'Trend_Slope', 'CAGR_%', 'Sharpe_Ratio']].to_string(index=False))
+    
+    # Top x performers by CAGR
+    top_cagr = final_summary.nlargest(top_x, 'CAGR_%')[['Ticker', 'Company_Name', 'Sector', 'Avg_Return_%', 'Volatility_%', 'CAGR_%', 'Sharpe_Ratio']]
+    print(f"\n🏆 TOP {top_x} PERFORMERS (by CAGR):")
+    print(top_cagr.to_string(index=False))
+    
+    # Top 10 performers by Sharpe Ratio
+    top_sharpe = final_summary.nlargest(10, 'Sharpe_Ratio')[['Ticker', 'Company_Name', 'Sector', 'Avg_Return_%', 'Volatility_%', 'CAGR_%', 'Sharpe_Ratio']]
+    print("\n🏆 TOP 10 PERFORMERS (by Sharpe Ratio):")
+    print(top_sharpe.to_string(index=False))
+    
+    # Sector statistics
+    sector_stats = final_summary.groupby('Sector').agg({
+        'Avg_Return_%': ['mean', 'std', 'count'],
+        'Volatility_%': ['mean', 'std'],
+        'Trend_Slope': ['mean', 'std'],
+        'Sharpe_Ratio': ['mean', 'std'],
+        'CAGR_%': ['mean', 'std'],
+        'Significant_Trend': 'sum'
+    }).round(4)
+    print("\n📈 SECTOR-WISE STATISTICS:")
+    print(sector_stats)
+    
+    # Overall statistics
+    overall_stats = final_summary[['Avg_Return_%', 'Volatility_%', 'Trend_Slope', 'Sharpe_Ratio', 'CAGR_%', 'Significant_Trend']].describe().round(4)
+    print("\n📊 OVERALL MARKET STATISTICS:")
+    print(overall_stats)
+    
+    # Correlation
+    corr_matrix = final_summary[['Avg_Return_%', 'Volatility_%', 'Trend_Slope', 'Sharpe_Ratio', 'CAGR_%']].corr()
+    print("\n🔗 CORRELATION MATRIX:")
+    print(corr_matrix)
+    
+    # Visualizations
+    if 'Sector' in final_summary.columns:
+        sector_avg = final_summary.groupby('Sector').agg({
+            'Avg_Return_%': 'mean',
+            'Volatility_%': 'mean',
+            'CAGR_%': 'mean'
+        }).reset_index()
+        
+        # Sector scatter plot
+        try:
+            plt.figure(figsize=(12, 8))
+            sns.scatterplot(data=sector_avg, x='Volatility_%', y='Avg_Return_%', hue='Sector', size='CAGR_%', sizes=(50, 200))
+            plt.title('Sector-wise Average Returns vs Volatility (Size by CAGR)')
+            plt.xlabel('Average Volatility (%)')
+            plt.ylabel('Average Return (%)')
+            plt.axhline(y=0, color='red', linestyle='--', alpha=0.5)
+            plt.axvline(x=sector_avg['Volatility_%'].mean(), color='red', linestyle='--', alpha=0.5)
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            plt.tight_layout()
+            save_path = os.path.join(save_dir, "sector_returns_volatility.png")
+            plt.savefig(save_path, dpi=100, bbox_inches='tight')
+            plt.close()
+            logging.info(f"Saved sector scatter plot at {save_path}")
+            print(f"✅ Saved sector scatter plot at {save_path}")
+        except Exception as e:
+            logging.error(f"Failed to save sector scatter plot: {str(e)}")
+            print(f"❌ Failed to save sector scatter plot: {str(e)}")
+        
+        # Sector Sharpe Ratio bar plot
+        try:
+            plt.figure(figsize=(12, 6))
+            sector_sharpe = final_summary.groupby('Sector')['Sharpe_Ratio'].mean().sort_values(ascending=False)
+            sns.barplot(x=sector_sharpe.index, y=sector_sharpe.values)
+            plt.title('Average Sharpe Ratio by Sector')
+            plt.xlabel('Sector')
+            plt.ylabel('Average Sharpe Ratio')
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            save_path = os.path.join(save_dir, "sector_sharpe_ratio.png")
+            plt.savefig(save_path, dpi=100, bbox_inches='tight')
+            plt.close()
+            logging.info(f"Saved sector Sharpe Ratio plot at {save_path}")
+            print(f"✅ Saved sector Sharpe Ratio plot at {save_path}")
+        except Exception as e:
+            logging.error(f"Failed to save sector Sharpe Ratio plot: {str(e)}")
+            print(f"❌ Failed to save sector Sharpe Ratio plot: {str(e)}")
+    
+    return final_summary, top_cagr, top_sharpe, sector_stats, overall_stats, corr_matrix
+
+if __name__ == "__main__":
+    analyze_nse_stocks()

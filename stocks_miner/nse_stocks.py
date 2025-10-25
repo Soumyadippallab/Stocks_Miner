@@ -101,6 +101,9 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     plt.tight_layout()
-    plt.show(block=True)
+    #plt.show(block=True)
+    #plt.close('all')
+    #sys.exit(0)
+    from .utils import smart_show
+    smart_show()
     plt.close('all')
-    sys.exit(0)

@@ -1,24 +1,273 @@
 Metadata-Version: 2.4
 Name: stocks_miner
 Version: 0.1.0
-Summary: A Python package for stock market analysis and crash detection using TDA.
-Author: Soumyadip Das
-License: MIT
+Summary: A Python package for analyzing and detecting stock market crashes using TDA and ML.
+Home-page: https://github.com/Soumyadippallab/Stocks_Miner
+Author: Soumyadip Das, Rajdeep Chatterjee
+Author-email: dassoumyadip204@gmail.com, cse.rajdeep@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: pandas
-Requires-Dist: numpy
-Requires-Dist: yfinance
-Requires-Dist: scikit-learn
-Requires-Dist: scipy
-Requires-Dist: matplotlib
-Requires-Dist: seaborn
-Requires-Dist: yahooquery
-Requires-Dist: tqdm
-Requires-Dist: requests
-Requires-Dist: ripser
-Requires-Dist: persim
+Requires-Dist: pandas==2.3.2
+Requires-Dist: numpy==1.26.4
+Requires-Dist: yfinance==0.2.66
+Requires-Dist: scikit-learn==1.6.1
+Requires-Dist: scipy==1.13.1
+Requires-Dist: matplotlib==3.9.4
+Requires-Dist: seaborn==0.13.2
+Requires-Dist: yahooquery==2.4.1
+Requires-Dist: tqdm==4.67.1
+Requires-Dist: requests==2.32.4
+Requires-Dist: ripser==0.6.12
+Requires-Dist: persim==0.3.8
 Dynamic: author
-Dynamic: license
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
 Dynamic: license-file
 Dynamic: requires-dist
+Dynamic: requires-python
 Dynamic: summary
+
+# Stocks Miner
+
+**Stocks Miner** is a Python-based tool for financial data analysis, leveraging libraries like yfinance, pandas, matplotlib, seaborn, tqdm, scikit-learn, ripser, and persim to process stock market data. It provides command-line interfaces (CLIs) for four main functionalities:
+
+1. Analyze SENSEX and NIFTY indices with statistical metrics (CAGR, daily returns, correlations) and visualizations (price trends, returns plots, heatmaps).  
+2. Analyze NSE stocks with company-wise metrics (CAGR) and visualizations of top performers.  
+3. Analyze randomly selected stocks or sectors with CAGR rankings.  
+4. Detect market crashes using Topological Data Analysis (TDA) on user-provided stock data via Takens embedding, persistent homology, and bottleneck distances.
+
+## Installation
+
+You can install the package locally by navigating to the Stocks_Miner directory and running:
+
+```bash
+pip install .
+```
+
+Or using the traditional setup:
+
+```bash
+python setup.py install
+```
+
+**Note**: Run commands from the parent `Stocks_Miner/` directory (not inside `stocks_miner/`) using `python -m stocks_miner.cli <command>` to handle relative imports.
+
+## Usage
+
+1. Analyze Market Indices  
+   ```bash
+   python -m stocks_miner.cli indices --start_date 2024-01-01 --end_date 2025-09-21
+   ```
+
+2. Analyze NSE Stocks  
+   ```bash
+   python -m stocks_miner.cli nse --num_tickers 10 --top_x 5 --start_date 2024-01-01 --end_date 2025-09-21
+   ```
+
+3. Analyze Random Stocks/Sectors  
+   ```bash
+   python -m stocks_miner.cli random --k 5 --selection_type companies --start_date 2024-01-01 --end_date 2025-09-21
+   ```
+
+# Stocks Miner
+
+**Stocks Miner** is a Python tool for financial data analysis. It uses libraries such as yfinance, pandas, matplotlib, seaborn, tqdm, scikit-learn, ripser, and persim to process stock market data. The package exposes a CLI with the following capabilities:
+
+- Analyze market indices (SENSEX, NIFTY) with metrics and visualizations (CAGR, daily returns, correlations, price trends, heatmaps).
+- Analyze NSE stocks with company-wise metrics and top-performer visualizations.
+- Analyze randomly selected stocks or sectors and rank by CAGR.
+- Detect market crashes using Topological Data Analysis (TDA) on stock time series via Takens' embedding, persistent homology, and bottleneck distances.
+
+## Prerequisites
+
+- Python 3.8+ is recommended (set this in `setup.py` with `python_requires` if you want to enforce it).
+- A virtual environment is strongly recommended to keep dependencies isolated.
+
+## Installation
+
+From the repository root (recommended):
+
+```powershell
+# Create and activate a virtual environment (PowerShell)
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# Install in editable/development mode
+python -m pip install -e .
+
+# Or install dependencies from requirements.txt
+python -m pip install -r requirements.txt
+```
+
+Notes:
+- Prefer `python -m pip install -e .` or `python -m pip install .` over `python setup.py install` which is deprecated for most workflows.
+- If you publish this package, pin dependency versions in `requirements.txt` or use `setup.cfg`/`pyproject.toml` to manage them.
+
+## Usage (examples)
+Syntax for vscode 
+Analyze market indices (example dates):
+
+```powershell
+python -m stocks_miner.cli indices --start_date 2024-01-01 --end_date 2025-09-21
+```
+
+Analyze NSE stocks:
+
+```powershell
+python -m stocks_miner.cli nse --num_tickers 10 --top_x 5 --start_date 2024-01-01 --end_date 2025-09-21
+```
+
+Analyze random stocks/sectors:
+
+```powershell
+python -m stocks_miner.cli random --k 5 --selection_type companies --start_date 2024-01-01 --end_date 2025-09-21
+```
+
+TDA crash detection for a ticker:
+
+```powershell
+python -m stocks_miner.cli tda --ticker <TICKER> --start_date 2024-01-01 --end_date 2025-09-21
+```
+
+For full help and options:
+
+```powershell
+python -m stocks_miner.cli --help
+```
+
+Syntax for notebook
+
+### Cell 1: Setup and Import
+import sys
+import os
+
+# Add stocks_miner to path
+sys.path.insert(0, os.path.join(os.getcwd(), 'stocks_miner'))
+
+# Import the helper
+from notebook_helper import setup_stocks_miner
+
+# Setup Stocks Miner and get the modules
+sm = setup_stocks_miner()
+
+# Optional: Also load random_stocks
+from stocks_miner import random_stocks
+sm.random_stocks = random_stocks
+
+print("✓ All modules loaded!")
+
+### Cell 2: Analyze Market Indices
+# Analyze major market indices (NIFTY 50, SENSEX, etc.)
+sm.market_indices.analyze_market_indices(
+    start_date="2025-01-01", 
+    end_date="2025-09-21"
+)
+
+### Cell 3: Analyze NSE Stocks
+# Analyze top NSE stocks
+sm.nse_stocks.analyze_nse_stocks(
+    num_tickers=10,     # Number of stocks to analyze
+    top_x=5,            # Top performers to identify
+    start_date="2025-01-01", 
+    end_date="2025-09-21"
+)
+
+### Cell 4: Analyze Random Stocks or Sectors
+# Analyze random selection of stocks or sectors
+sm.random_stocks.analyze_random_stocks_or_sectors(
+    k=5,                          # Number to select
+    selection_type='companies',   # 'companies' or 'sectors'
+    start_date="2025-01-01", 
+    end_date="2025-09-21"
+)
+
+### Cell 5: TDA Crash Detection (Advanced)
+# Topological Data Analysis for crash detection
+sm.tda_crash.process_stock_data(
+    ticker='RELIANCE.NS',
+    start_date='2020-01-01',
+    end_date='2024-12-31',
+    window_size=50,
+    embedding_dim=3,
+    time_delay=1
+)
+
+
+
+
+## Directory structure
+
+```
+Stocks_Miner/
+├── data/                   # User-provided CSV/XLSX files for TDA
+├── examples/               # Example scripts or notebooks (optional)
+├── stocks_miner/           # Main Python package
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── market_indices.py
+│   ├── nse_stocks.py
+│   ├── random_stocks.py
+│   ├── tda_crash_detection.py
+│   └── utils.py
+├── tests/                  # Unit tests (optional)
+├── LICENSE
+├── README.md
+├── requirements.txt
+└── setup.py
+```
+
+## Dependencies
+
+Major dependencies include: `pandas`, `numpy`, `yfinance`, `matplotlib`, `seaborn`, `tqdm`, `scikit-learn`, `ripser`, `persim`, and `yahooquery`.
+
+Install them via the `requirements.txt` file as shown above.
+
+## Notes & recommendations
+
+- Grammar/wording: "Takens' embedding" is a clearer form than "Takens embedding".
+- Git: avoid committing generated artifacts such as virtual environments and Python bytecode. Add a `.gitignore` (example below) and remove tracked artifacts from the repo if present.
+
+Example `.gitignore` snippet to add at the repo root:
+
+```
+# Virtual envs
+venv/
+.venv/
+
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Packaging
+dist/
+build/
+*.egg-info/
+```
+
+## Tests
+
+If you have tests under `tests/`, run them with your test runner (e.g., `pytest`) after activating the virtual environment:
+
+```powershell
+pytest -q
+```
+
+## Author
+
+Soumyadip Das, and <a href="https://github.com/cserajdeep"> Rajdeep Chatterjee </a>
+
+## Organization
+
+AmygdalaAI-India Lab [https://amygdalaaiindia.github.io/]
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.

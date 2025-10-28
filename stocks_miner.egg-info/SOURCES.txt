@@ -12,6 +12,6 @@ stocks_miner/utils.py
 stocks_miner.egg-info/PKG-INFO
 stocks_miner.egg-info/SOURCES.txt
 stocks_miner.egg-info/dependency_links.txt
-stocks_miner.egg-info/entry_points.txt
 stocks_miner.egg-info/requires.txt
 stocks_miner.egg-info/top_level.txt
+tests/test_basic.py

@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.egg-info/
+build/
+dist/
+*.egg
+
+# Virtual environments
+venv/
+testenv/
+
+# IDEs and tools
+.vscode/
+.idea/
+.DS_Store

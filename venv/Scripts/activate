@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV='C:\Users\Soumyadip\Desktop\Stock_Miner2\venv'
+VIRTUAL_ENV='C:\Users\Soumyadip\Desktop\Stocks_Miner\venv'
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

@@ -1,4 +1,4 @@
-#!C:\Users\Soumyadip\Desktop\Stock_Miner2\venv\Scripts\python.exe
+#!C:\Users\Soumyadip\Desktop\Stocks_Miner\venv\Scripts\python.exe
 
 import datetime
 import os

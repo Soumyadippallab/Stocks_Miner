@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="stocks_miner",
-    version="0.1.0",
+    version="0.1.1",
     author="Soumyadip Das, Rajdeep Chatterjee",
     author_email="dassoumyadip204@gmail.com, cse.rajdeep@gmail.com",
     description="A Python package for analyzing and detecting stock market crashes using TDA and ML.",

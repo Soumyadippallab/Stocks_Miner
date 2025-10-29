@@ -77,7 +77,7 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
         # Skip plotting in notebooks if range is too small (causes rendering errors)
         if in_notebook and data_range < 30:  # Less than 30% range in notebooks
             print("\n⚠️  Plot not shown: Date range too short for Jupyter/Colab visualization.")
-            print("    The CAGR values above are still accurate. Try a longer date range (6+ months) for plots.")
+            print("    The CAGR values above are still accurate. Try a longer date range (6+ months) for plots. Or try VS-code for plotting such time ranges")
             return
     
     try:

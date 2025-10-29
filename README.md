@@ -1,47 +1,5 @@
 # Stocks Miner
 
-**Stocks Miner** is a Python-based tool for financial data analysis, leveraging libraries like yfinance, pandas, matplotlib, seaborn, tqdm, scikit-learn, ripser, and persim to process stock market data. It provides command-line interfaces (CLIs) for four main functionalities:
-
-1. Analyze SENSEX and NIFTY indices with statistical metrics (CAGR, daily returns, correlations) and visualizations (price trends, returns plots, heatmaps).  
-2. Analyze NSE stocks with company-wise metrics (CAGR) and visualizations of top performers.  
-3. Analyze randomly selected stocks or sectors with CAGR rankings.  
-4. Detect market crashes using Topological Data Analysis (TDA) on user-provided stock data via Takens embedding, persistent homology, and bottleneck distances.
-
-## Installation
-
-You can install the package locally by navigating to the Stocks_Miner directory and running:
-
-```bash
-pip install .
-```
-
-Or using the traditional setup:
-
-```bash
-python setup.py install
-```
-
-**Note**: Run commands from the parent `Stocks_Miner/` directory (not inside `stocks_miner/`) using `python -m stocks_miner.cli <command>` to handle relative imports.
-
-## Usage
-
-1. Analyze Market Indices  
-   ```bash
-   python -m stocks_miner.cli indices --start_date 2024-01-01 --end_date 2025-09-21
-   ```
-
-2. Analyze NSE Stocks  
-   ```bash
-   python -m stocks_miner.cli nse --num_tickers 10 --top_x 5 --start_date 2024-01-01 --end_date 2025-09-21
-   ```
-
-3. Analyze Random Stocks/Sectors  
-   ```bash
-   python -m stocks_miner.cli random --k 5 --selection_type companies --start_date 2024-01-01 --end_date 2025-09-21
-   ```
-
-# Stocks Miner
-
 **Stocks Miner** is a Python tool for financial data analysis. It uses libraries such as yfinance, pandas, matplotlib, seaborn, tqdm, scikit-learn, ripser, and persim to process stock market data. The package exposes a CLI with the following capabilities:
 
 - Analyze market indices (SENSEX, NIFTY) with metrics and visualizations (CAGR, daily returns, correlations, price trends, heatmaps).
@@ -52,107 +10,115 @@ python setup.py install
 ## Prerequisites
 
 - Python 3.8+ is recommended (set this in `setup.py` with `python_requires` if you want to enforce it).
-- A virtual environment is strongly recommended to keep dependencies isolated.
 
 ## Installation
 
-From the repository root (recommended):
+Install directly from PyPI:
 
-```powershell
-# Create and activate a virtual environment (PowerShell)
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-# Install in editable/development mode
-python -m pip install -e .
-
-# Or install dependencies from requirements.txt
-python -m pip install -r requirements.txt
+```bash
+pip install stocks-miner
 ```
 
-Notes:
-- Prefer `python -m pip install -e .` or `python -m pip install .` over `python setup.py install` which is deprecated for most workflows.
-- If you publish this package, pin dependency versions in `requirements.txt` or use `setup.cfg`/`pyproject.toml` to manage them.
+This will automatically install all dependencies. For local development from the repository root:
+
+```bash
+pip install .
+```
+
+**Note**: Run commands from the parent `Stocks_Miner/` directory (not inside `stocks_miner/`) using `python -m stocks_miner.cli <command>` to handle relative imports.
 
 ## Usage (examples)
-Syntax for vscode 
+
+### CLI Usage (VS Code/Terminal)
+
 Analyze market indices (example dates):
 
-```powershell
+```bash
 python -m stocks_miner.cli indices --start_date 2024-01-01 --end_date 2025-09-21
 ```
 
 Analyze NSE stocks:
 
-```powershell
+```bash
 python -m stocks_miner.cli nse --num_tickers 10 --top_x 5 --start_date 2024-01-01 --end_date 2025-09-21
 ```
 
 Analyze random stocks/sectors:
 
-```powershell
+```bash
 python -m stocks_miner.cli random --k 5 --selection_type companies --start_date 2024-01-01 --end_date 2025-09-21
 ```
 
 TDA crash detection for a ticker:
 
-```powershell
+```bash
 python -m stocks_miner.cli tda --ticker <TICKER> --start_date 2024-01-01 --end_date 2025-09-21
 ```
 
 For full help and options:
 
-```powershell
+```bash
 python -m stocks_miner.cli --help
 ```
 
-Syntax for notebook
+### Notebook Usage (Jupyter/Colab)
 
-### Cell 1: Setup and Import
-import sys
-import os
+For notebooks, install the package (if not already installed). In a Colab cell:
 
-# Add stocks_miner to path
-sys.path.insert(0, os.path.join(os.getcwd(), 'stocks_miner'))
+```python
+!pip install stocks-miner
+```
 
-# Import the helper
-from notebook_helper import setup_stocks_miner
+Then, in subsequent cells, use the dotted imports (no path modifications needed after installation). Here's an example structure:
+
+#### Cell 1: Setup and Import
+```python
+# Import the helper (notebook_helper.py is part of the stocks_miner package)
+from stocks_miner.notebook_helper import setup_stocks_miner
 
 # Setup Stocks Miner and get the modules
 sm = setup_stocks_miner()
 
-# Optional: Also load random_stocks
+# Optional: Direct access to modules (already available via sm)
 from stocks_miner import random_stocks
-sm.random_stocks = random_stocks
+sm.random_stocks = random_stocks  # If needed for legacy compatibility
 
 print("✓ All modules loaded!")
+```
 
-### Cell 2: Analyze Market Indices
+#### Cell 2: Analyze Market Indices
+```python
 # Analyze major market indices (NIFTY 50, SENSEX, etc.)
 sm.market_indices.analyze_market_indices(
-    start_date="2025-01-01", 
-    end_date="2025-09-21"
+    start_date="2024-01-01", 
+    end_date="2024-09-21"
 )
+```
 
-### Cell 3: Analyze NSE Stocks
+#### Cell 3: Analyze NSE Stocks
+```python
 # Analyze top NSE stocks
 sm.nse_stocks.analyze_nse_stocks(
     num_tickers=10,     # Number of stocks to analyze
     top_x=5,            # Top performers to identify
-    start_date="2025-01-01", 
-    end_date="2025-09-21"
+    start_date="2024-01-01", 
+    end_date="2024-09-21"
 )
+```
 
-### Cell 4: Analyze Random Stocks or Sectors
+#### Cell 4: Analyze Random Stocks or Sectors
+```python
 # Analyze random selection of stocks or sectors
 sm.random_stocks.analyze_random_stocks_or_sectors(
     k=5,                          # Number to select
     selection_type='companies',   # 'companies' or 'sectors'
-    start_date="2025-01-01", 
-    end_date="2025-09-21"
+    start_date="2024-01-01", 
+    end_date="2024-09-21"
 )
+```
 
-### Cell 5: TDA Crash Detection (Advanced)
+#### Cell 5: TDA Crash Detection (Advanced)
+```python
 # Topological Data Analysis for crash detection
 sm.tda_crash.process_stock_data(
     ticker='RELIANCE.NS',
@@ -162,36 +128,49 @@ sm.tda_crash.process_stock_data(
     embedding_dim=3,
     time_delay=1
 )
+```
 
-
-
+**Notes for Notebooks**:
+- Use past dates for `end_date` (e.g., up to 2024-09-21) to ensure data availability.
+- Restart the runtime after installation if dependency conflicts arise (common in Colab).
+- For local Jupyter: Ensure the package is installed in your environment (`pip install .` from repo root).
 
 ## Directory structure
 
 ```
 Stocks_Miner/
-├── data/                   # User-provided CSV/XLSX files for TDA
-├── examples/               # Example scripts or notebooks (optional)
+├── .ipynb_checkpoints/     # Jupyter notebook checkpoints
+├── build/                  # Build artifacts
+├── dist/                   # Distribution files
+├── examples/               # Example scripts or notebooks
 ├── stocks_miner/           # Main Python package
+│   ├── .ipynb_checkpoints/
+│   ├── __pycache__/
 │   ├── __init__.py
 │   ├── cli.py
 │   ├── market_indices.py
+│   ├── notebook_helper.py
 │   ├── nse_stocks.py
 │   ├── random_stocks.py
 │   ├── tda_crash_detection.py
 │   └── utils.py
+├── stocks_miner.egg-info/  # Egg metadata
 ├── tests/                  # Unit tests (optional)
+├── venv/                   # Virtual environment
+├── .gitignore
+├── code_sample.txt
 ├── LICENSE
 ├── README.md
 ├── requirements.txt
-└── setup.py
+├── setup.py
+└── stocks_miner.log
 ```
 
 ## Dependencies
 
 Major dependencies include: `pandas`, `numpy`, `yfinance`, `matplotlib`, `seaborn`, `tqdm`, `scikit-learn`, `ripser`, `persim`, and `yahooquery`.
 
-Install them via the `requirements.txt` file as shown above.
+These are automatically installed via `pip install stocks-miner`.
 
 ## Notes & recommendations
 
@@ -214,14 +193,6 @@ __pycache__/
 dist/
 build/
 *.egg-info/
-```
-
-## Tests
-
-If you have tests under `tests/`, run them with your test runner (e.g., `pytest`) after activating the virtual environment:
-
-```powershell
-pytest -q
 ```
 
 ## Author

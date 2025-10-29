@@ -102,7 +102,7 @@ sm.nse_stocks.analyze_nse_stocks(
     num_tickers=10,     # Number of stocks to analyze
     top_x=5,            # Top performers to identify
     start_date="2024-01-01", 
-    end_date="2024-09-21"
+    end_date="2024-09-21" #a short thing to be noted. The cdoommand doesnot evalute any plot for ranges which are smaller than 1 year due to image pixel isues and hence only the cagr values will be shown without any plots. For larger time ranges no issue occurs. plots will be shown along with cagr commpputations for lrger time ranges. Although no such issue occurs in vs code .
 )
 ```
 

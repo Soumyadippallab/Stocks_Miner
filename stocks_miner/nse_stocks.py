@@ -56,10 +56,23 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
         print(f"{ticker}: {cagr:.2f}%")
     
     # Attempt to plot - wrap in try-except to handle rendering errors
+    # Plot top performers with simple, soothing style
+    top_tickers = [x[0] for x in results[:top_x]]
+    top_cagr = [x[1] for x in results[:top_x]]
+    
+    # Check if data range is too small and skip plotting to avoid rendering errors
+    if top_cagr:
+        min_cagr = min(top_cagr)
+        max_cagr = max(top_cagr)
+        data_range = max_cagr - min_cagr
+        
+        # If range is extremely small, skip plotting
+        if data_range < 1.0:  # Less than 1% range
+            print("\n⚠️  Plot not shown: CAGR values are too similar for meaningful visualization.")
+            print("    The CAGR values above are still accurate. Try a longer date range for better visualization.")
+            return
+    
     try:
-        # Plot top performers with simple, soothing style
-        top_tickers = [x[0] for x in results[:top_x]]
-        top_cagr = [x[1] for x in results[:top_x]]
         # Elegant, eye-catching color - single color for simplicity
         elegant_purple = '#8B5CF6' # Rich, sophisticated purple
         fig, ax = plt.subplots(figsize=(10, 8))  # Increased height for better label fit in Colab
@@ -80,25 +93,19 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
         num_bars = len(top_tickers)
         ax.set_xticks(range(num_bars))
         ax.set_xticklabels(top_tickers, rotation=30, ha='right', fontsize=10)  # Reduced to 30°
-        # Adjust y limits with minimum range to prevent image size explosion
-        if top_cagr:
-            min_cagr = min(top_cagr)
-            max_cagr = max(top_cagr)
-            data_range = max_cagr - min_cagr
-            
-            # Set minimum range to prevent microscopic scales
-            MIN_RANGE = 10  # Minimum 10% range
-            
-            if data_range < MIN_RANGE:
-                # Center the data and use minimum range
-                center = (max_cagr + min_cagr) / 2
-                ax.set_ylim(center - MIN_RANGE/2, center + MIN_RANGE/2)
-            else:
-                # Use padding for larger ranges
-                padding = 0.15 * data_range
-                ax.set_ylim(min_cagr - padding, max_cagr + padding)
+        
+        # Set minimum range to prevent microscopic scales
+        MIN_RANGE = 10  # Minimum 10% range
+        
+        if data_range < MIN_RANGE:
+            # Center the data and use minimum range
+            center = (max_cagr + min_cagr) / 2
+            ax.set_ylim(center - MIN_RANGE/2, center + MIN_RANGE/2)
         else:
-            ax.set_ylim(-100, 100)
+            # Use padding for larger ranges
+            padding = 0.15 * data_range
+            ax.set_ylim(min_cagr - padding, max_cagr + padding)
+        
         # Simple value labels with adjusted vertical alignment for negatives
         for bar, cagr_val in zip(bars, top_cagr):
             height = bar.get_height()
@@ -112,23 +119,32 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
         ax.spines['right'].set_visible(False)
         # Manual bottom margin adjustment for rotated labels
         plt.subplots_adjust(bottom=0.18)
-        plt.tight_layout()  # Now applies without overflow
-        #plt.show(block=True)
-        #plt.close('all')
-        #sys.exit(0)
-        from .utils import smart_show
-        smart_show()
+        
+        # Suppress tight_layout warnings
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning, message='.*Tight layout.*')
+            plt.tight_layout()
+        
+        # Try to display the plot with error handling
+        try:
+            from .utils import smart_show
+            smart_show()
+        except Exception as display_error:
+            # Catch errors that occur during display/rendering
+            error_msg = str(display_error)
+            if "Image size" in error_msg or "too large" in error_msg:
+                print("\n⚠️  Plot not shown due to Colab/Notebook rendering limitations.")
+                print("    The CAGR values above are still accurate. Try a longer date range for visualization.")
+            else:
+                print(f"\n⚠️  Plot display failed: {error_msg}")
+        finally:
+            plt.close('all')
+    except Exception as e:
+        # If plotting construction fails
         plt.close('all')
-    except (ValueError, UserWarning, Exception) as e:
-        # If plotting fails due to image size or other rendering issues
         error_msg = str(e)
-        if "Image size" in error_msg or "too large" in error_msg or "Tight layout" in error_msg:
-            print("\n⚠️  Plot not shown due to Colab/Notebook rendering limitations for this date range.")
-            print("    The CAGR values above are still accurate. Try a longer date range for visualization or try VS-code for proper visualisations of all typea")
-        else:
-            print(f"\n⚠️  Plot rendering failed: {error_msg}")
-        plt.close('all')
-
+        print(f"\n⚠️  Plot creation failed: {error_msg}")
 
 # import pandas as pd
 # import yfinance as yf

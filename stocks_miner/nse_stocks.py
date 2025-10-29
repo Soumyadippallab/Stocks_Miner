@@ -60,22 +60,32 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
     top_tickers = [x[0] for x in results[:top_x]]
     top_cagr = [x[1] for x in results[:top_x]]
     
-    # Check if data range is too small and skip plotting to avoid rendering errors
+    # Check if data range is too small - especially problematic in Jupyter/Colab
     if top_cagr:
         min_cagr = min(top_cagr)
         max_cagr = max(top_cagr)
         data_range = max_cagr - min_cagr
         
-        # If range is extremely small, skip plotting
-        if data_range < 1.0:  # Less than 1% range
-            print("\n⚠️  Plot not shown: CAGR values are too similar for meaningful visualization.")
-            print("    The CAGR values above are still accurate. Try a longer date range for better visualization.")
+        # Detect if running in Jupyter/Colab
+        try:
+            from .utils import _get_ipython
+            ipython = _get_ipython()
+            in_notebook = ipython is not None and 'IPKernelApp' in ipython.config
+        except:
+            in_notebook = False
+        
+        # Skip plotting in notebooks if range is too small (causes rendering errors)
+        if in_notebook and data_range < 30:  # Less than 30% range in notebooks
+            print("\n⚠️  Plot not shown: Date range too short for Jupyter/Colab visualization.")
+            print("    The CAGR values above are still accurate. Try a longer date range (6+ months) for plots.")
             return
     
     try:
         # Elegant, eye-catching color - single color for simplicity
         elegant_purple = '#8B5CF6' # Rich, sophisticated purple
-        fig, ax = plt.subplots(figsize=(10, 8))  # Increased height for better label fit in Colab
+        
+        # Create figure with explicit close on error
+        fig, ax = plt.subplots(figsize=(10, 8))
       
         # Create clean bars
         bars = ax.bar(top_tickers, top_cagr,
@@ -92,7 +102,7 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
         # Rotate x labels (reduced angle for better fit)
         num_bars = len(top_tickers)
         ax.set_xticks(range(num_bars))
-        ax.set_xticklabels(top_tickers, rotation=30, ha='right', fontsize=10)  # Reduced to 30°
+        ax.set_xticklabels(top_tickers, rotation=30, ha='right', fontsize=10)
         
         # Set minimum range to prevent microscopic scales
         MIN_RANGE = 10  # Minimum 10% range
@@ -123,29 +133,25 @@ def analyze_nse_stocks(num_tickers=10, top_x=5, start_date=None, end_date=None):
         # Suppress tight_layout warnings
         import warnings
         with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=UserWarning, message='.*Tight layout.*')
-            plt.tight_layout()
+            warnings.filterwarnings('ignore')
+            try:
+                plt.tight_layout()
+            except:
+                pass
         
-        # Try to display the plot with error handling
-        try:
-            from .utils import smart_show
-            smart_show()
-        except Exception as display_error:
-            # Catch errors that occur during display/rendering
-            error_msg = str(display_error)
-            if "Image size" in error_msg or "too large" in error_msg:
-                print("\n⚠️  Plot not shown due to Colab/Notebook rendering limitations.")
-                print("    The CAGR values above are still accurate. Try a longer date range for visualization.")
-            else:
-                print(f"\n⚠️  Plot display failed: {error_msg}")
-        finally:
-            plt.close('all')
+        from .utils import smart_show
+        smart_show()
+        plt.close('all')
+            
     except Exception as e:
-        # If plotting construction fails
+        # If plotting fails
         plt.close('all')
         error_msg = str(e)
-        print(f"\n⚠️  Plot creation failed: {error_msg}")
-
+        if "Image size" in error_msg or "too large" in error_msg:
+            print("\n⚠️  Plot not shown due to rendering limitations.")
+            print("    The CAGR values above are still accurate.")
+        else:
+            print(f"\n⚠️  Plot failed: {error_msg}")
 # import pandas as pd
 # import yfinance as yf
 # from tqdm import tqdm
